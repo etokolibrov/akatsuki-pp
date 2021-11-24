@@ -2058,14 +2058,14 @@ int pp_std(ezpp_t ez) {
   int ncircles = ez->ncircles;
   float nobjects_over_2k = ez->nobjects / 2000.0f;
 
-  float bonus_factor = (ez->mods & MODS_RX) ? 0.9f : 0.95f;
+  float bonus_factor = (ez->mods & MODS_RX) ? 0.88f : 0.95f;
   float length_bonus = (
     bonus_factor +
     0.4f * al_min(1.0f, nobjects_over_2k) +
     (ez->nobjects > 2000 ? (float)log10(nobjects_over_2k) * 0.5f : 0.0f)
   );
 
-  float start_factor = (ez->mods & MODS_RX) ? 0.95f : 0.97f;
+  float start_factor = (ez->mods & MODS_RX) ? 0.96f : 0.97f;
   float start_factor_speed = (ez->mods & MODS_RX) ? start_factor - 0.01f : start_factor;
   float miss_penality_aim = start_factor * pow(1 - pow((double)ez->nmiss / ez->nobjects, 0.775), ez->nmiss);
   float miss_penality_speed = start_factor_speed * pow(1 - pow((double)ez->nmiss / ez->nobjects, 0.775f), pow(ez->nmiss, 0.875f));
@@ -2073,6 +2073,7 @@ int pp_std(ezpp_t ez) {
   float combo_break = (
     (float)pow(ez->combo, 0.8f) / (float)pow(ez->max_combo, 0.8f)
   );
+
   float ar_bonus;
   float final_multiplier;
   float acc_bonus, od_bonus;
@@ -2164,7 +2165,7 @@ int pp_std(ezpp_t ez) {
   }
 
   if (ez->mods & MODS_EZ) {
-    float base_buff = 1.04f;
+    float base_buff = 1.06f;
 
     if (ez->ar <= 4)
       base_buff += ((5 - ez->ar) / 100);
@@ -2178,11 +2179,12 @@ int pp_std(ezpp_t ez) {
   /* acc bonus (bad aim can lead to bad acc) */
   if (ez->mods & MODS_RX) {
     if (ez->od >= 10.6f) {
-      acc_bonus = (accuracy < 0.98f) ? (0.5f - (1.0f - accuracy)) + accuracy / 2.0f : 0.5f + accuracy / 2.0f;
+      acc_bonus = 0.5f + accuracy / 2.0f;
     } else {
       acc_bonus = (accuracy >= 0.97f) ? 0.4f + accuracy / 2.0f : 0.3f + accuracy / 2.0f;
     }
   }
+
   else acc_bonus = 0.5f + accuracy / 2.0f;
 
   /* od bonus (high od requires better aim timing to acc) */
@@ -2230,7 +2232,7 @@ int pp_std(ezpp_t ez) {
   if (ez->mods & MODS_RX) {
     float streams_nerf = ez->aim_pp / (ez->speed_pp);
     if (streams_nerf < 1.0f) {
-      acc_depression = accuracy < 1.0f ? 0.93f - (1.0f - accuracy) : 0.93f;
+      acc_depression = accuracy < 1.0f ? 0.92f - (1.0f - accuracy) : 0.92f;
       if (acc_depression > 0.0f) ez->aim_pp *= acc_depression;
     }
   }
@@ -2248,6 +2250,9 @@ int pp_std(ezpp_t ez) {
   );
 
   if (ez->mods & MODS_RX) {
+    if (ez->mods & MODS_DT && ez->mods & MODS_HR) ez->pp *= 1.02f; /* (hd)dthr bonus */
+    if (strcmp(ez->creator, "ParkourWizard") == 0) ez->pp *= 0.9f; /* XD */
+
     switch (ez->beatmap_id) {
       case 1808605: /* Louder than steel [ok this is epic] */
         ez->pp *= 0.85f;
@@ -2256,16 +2261,15 @@ int pp_std(ezpp_t ez) {
         ez->pp *= 0.70f;
         break;
       case 1844776: /* Just press F [Parkour's ok this is epic] */
-        ez->pp *= 0.60f;
+        ez->pp *= 0.64f;
         break;
       case 1777768: /* Hardware Store [skyapple mode] */
       case 2079597: /* HONESTY [RIGHTEOUSNESS OF MORALITY] */
-      case 1754777: /* Sidetracked Day [Infinity Inside] */
         ez->pp *= 0.90f;
         break;
       case 1962833: /* Akatsuki compilation [ok this is akatsuki] */
-        if (ez->mods & MODS_DT) ez->pp *= 0.75f;
-        else ez->pp *= 0.85f;
+        ez->pp *= 0.885f;
+        if (ez->mods & MODS_DT) ez->pp *= 0.83f;
         break;
       default:
         break;
@@ -2275,7 +2279,6 @@ int pp_std(ezpp_t ez) {
   }
 
   if (ez->mods & MODS_RX) ez->pp *= 0.9f;
-
   ez->accuracy_percent = accuracy * 100.0f;
 
   return 0;
